@@ -1,14 +1,4 @@
-// audience: external
 // # soft-crt
-// 分层 CRT 着色器。第 1 层：官方风格全屏效果——高斯泛光（10x10 采样）+ 方波扫描线（周期=scale）。
-//   红线扫过的后方区域里，泛光核直径由 GLOW_PX_MIN lerp 放大到 GLOW_PX_MAX（仅缩放采样间距），
-//   同时泛光强度由常态 lerp 提升到 SWEEP_GLOW_BOOST 倍，形成可见的"扫过点亮"脉冲。
-// 第 2 层（有背景填色的色块，用邻域"非黑覆盖率"判定，边界渐变羽化）：压暗并降饱和块底本身，
-//   把块内文字相对底色的对比放大使其凸显，叠加亮->暗单向泛光。
-// 第 3 层：随 time 下扫——宽光带（仅色块区显色）+ 一根 1px 全不透明红色基准线（全屏扫描）。
-// 契约固定：入口 main、Texture2D shaderTexture、SamplerState samplerState、
-//   cbuffer 字段顺序 float time / float scale / float2 resolution / float4 background。
-
 Texture2D    shaderTexture;
 SamplerState samplerState;
 
@@ -20,7 +10,7 @@ cbuffer PixelShaderSettings
     float4 background;
 };
 
-// ---- 可调旋钮 ----
+// ---- 可调 ----
 #define GLOW_WEIGHT      0.30   // 常态全屏泛光权重（官方 0.3）
 #define GLOW_SAMPLES     10     // 泛光核采样边长（10x10=100 采样）
 #define GLOW_PX_MIN      10.0   // 常态泛光核直径（像素）
@@ -54,7 +44,6 @@ float Gaussian2D(float x, float y, float sigma)
 }
 
 // 官方结构的高斯泛光核（GLOW_SAMPLES 边长）。bscale 缩放采样间距 -> 放大/缩小核直径；
-// 采样数不变，权重用采样单位不变的 sigma=2*scale，故仅是每像素一个标量、零额外采样。
 float3 Blur(float2 tc, float bscale)
 {
     float w, h;
